@@ -28,6 +28,7 @@ exports.createTodo = async (req, res) => {
 };
 
 
+
 exports.getTodos = async (req, res) => {
   const userId = req.user.id;
   const category = req.query.category;  
@@ -37,12 +38,13 @@ exports.getTodos = async (req, res) => {
       ? await Todo.findByUserIdAndCategory(userId, category) 
       : await Todo.findByUserId(userId); 
 
-    res.status(200).json(todos);
+    res.send({ type: 'todos', data: todos });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Database error", details: error.message });
+    res.send({ type: 'error', message: "Database error", details: error.message });
   }
 };
+
 
 
 exports.updateTodo = async (req, res) => {
@@ -138,6 +140,25 @@ exports.deleteAllCustomCategories = async (req, res) => {
   }
 };
 
+exports.fetchTodosForUser = async (ws, req, category) => {
+  const userId = req.session.user ? req.session.user.id : null;
+  console.log('Fetching todos for userId:', userId);
+  
+  if (!userId) {
+    ws.send(JSON.stringify({ type: 'error', message: 'User not authenticated' }));
+    return;
+  }
+  try {
+    const todos = category 
+      ? await Todo.findByUserIdAndCategory(userId, category) 
+      : await Todo.findByUserId(userId); 
+
+     ws.send(JSON.stringify({ type: 'todos', data: todos }));
+  } catch (error) {
+    console.error('Error fetching todos:', error);
+    ws.send(JSON.stringify({ type: 'error', message: 'Database error', details: error.message }));
+  }
+};
 exports.deleteAllTodos = async (req, res) => {
   const userId = req.user.id;
 
