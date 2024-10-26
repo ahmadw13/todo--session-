@@ -140,25 +140,27 @@ exports.deleteAllCustomCategories = async (req, res) => {
   }
 };
 
-exports.fetchTodosForUser = async (ws, req, category) => {
-  const userId = req.session.user ? req.session.user.id : null;
+// controllers/todoController.js
+
+exports.fetchTodosForUser = async (ws, userId, category) => {
   console.log('Fetching todos for userId:', userId);
-  
+
   if (!userId) {
-    ws.send(JSON.stringify({ type: 'error', message: 'User not authenticated' }));
-    return;
+      ws.send(JSON.stringify({ type: 'error', message: 'User not authenticated' }));
+      return;
   }
   try {
-    const todos = category 
-      ? await Todo.findByUserIdAndCategory(userId, category) 
-      : await Todo.findByUserId(userId); 
-
-     ws.send(JSON.stringify({ type: 'todos', data: todos }));
+      const todos = category 
+          ? await Todo.findByUserIdAndCategory(userId, category) 
+          : await Todo.findByUserId(userId);
+      ws.send(JSON.stringify({ type: 'todos', data: todos }));
   } catch (error) {
-    console.error('Error fetching todos:', error);
-    ws.send(JSON.stringify({ type: 'error', message: 'Database error', details: error.message }));
+      console.error('Error fetching todos:', error);
+      ws.send(JSON.stringify({ type: 'error', message: 'Database error', details: error.message }));
   }
 };
+
+
 exports.deleteAllTodos = async (req, res) => {
   const userId = req.user.id;
 

@@ -41,20 +41,31 @@ app.use("/todo", todoRoutes);
 app.use("/categories", categoryRoutes);
 
 app.ws("/ws/todos", (ws, req) => {
+  const userId = req.session.user ? req.session.user.id : null;
+
+  if (!userId) {
+      ws.send(JSON.stringify({ type: "error", message: "User not authenticated" }));
+      ws.close();
+      return;
+  }
+
+  console.log("WebSocket connection initialized for userId:", userId);
+
   ws.on("message", async (msg) => {
-    try {
-      const data = JSON.parse(msg);
-      if (data.type === "fetchTodos") {
-        const category = data.category;
-        await fetchTodosForUser(ws, req, category);
+      try {
+          const data = JSON.parse(msg);
+          
+          if (data.type === "fetchTodos") {
+              const category = data.category || null;
+              await fetchTodosForUser(ws, userId, category); 
+          }
+      } catch (error) {
+          console.error("Error processing WebSocket message:", error);
       }
-    } catch (error) {
-      console.error("Error parsing WebSocket message:", error);
-    }
   });
 
   ws.on("close", () => {
-    console.log("WebSocket connection closed");
+      console.log("WebSocket connection closed for userId:", userId);
   });
 });
 

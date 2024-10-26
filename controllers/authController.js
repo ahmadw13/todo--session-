@@ -13,10 +13,7 @@ exports.register = async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
     const newUser = await User.create(username, hashedPassword);
-
-    // Store user info in session
     req.session.user = { id: newUser.id, username: newUser.username };
-
     res.status(201).json({
       message: "Registration successful",
       user: { id: newUser.id, username: newUser.username }
